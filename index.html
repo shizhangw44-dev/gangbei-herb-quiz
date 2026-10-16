@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>港北社區共惠時間銀行 - 機智問答挑戰賽</title>
+    <style>
+        body {
+            background-color: #B0BEC5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+        .big-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #002244;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            font-size: 20px;
+            color: #1A365D;
+            font-weight: bold;
+            margin-bottom: 25px;
+        }
+        .question-box {
+            background-color: #8FBC8F;
+            padding: 25px;
+            border-radius: 15px;
+            border: 3px solid #2C5282;
+            font-size: 26px;
+            font-weight: bold;
+            color: #111111;
+            margin-bottom: 25px;
+            line-height: 1.5;
+            text-align: left;
+        }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .quiz-btn {
+            flex: 1;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 20px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            color: white;
+            transition: 0.2s;
+        }
+        .btn-o { background-color: #27AE60; }
+        .btn-o:hover { background-color: #219653; }
+        .btn-x { background-color: #C0392B; }
+        .btn-x:hover { background-color: #A93226; }
+        .next-btn {
+            width: 100%;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 18px;
+            border-radius: 12px;
+            border: none;
+            background-color: #2980B9;
+            color: white;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .next-btn:hover { background-color: #2471A3; }
+        .feedback-box {
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .correct-bg { background-color: #A3E4D7; color: #111111; }
+        .wrong-bg { background-color: #F5B7B1; color: #111111; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- 音效與背景音樂對應您資料夾中的正確檔名 -->
+    <audio id="bgm" loop src="background_music.mp3"></audio>
+    <audio id="correct-sound" src="correct.mp3"></audio>
+    <audio id="wrong-sound" src="wrong.mp3"></audio>
+    <audio id="applaud-sound" src="applaud.mp3"></audio>
+
+    <div class="container" id="app">
+        <!-- 歡迎畫面 -->
+        <div id="welcome-screen">
+            <div class="big-title">🌟 港北社區共惠時間銀行 🌟</div>
+            <div class="subtitle">機智問答挑戰賽</div>
+            <p style="font-size: 18px; color: #555; margin-bottom: 30px;">點擊下方按鈕開始挑戰您的社區知識！</p>
+            <button class="next-btn" onclick="startGame()">🚀 開始答題挑戰</button>
+        </div>
+
+        <!-- 答題畫面 -->
+        <div id="quiz-screen" class="hidden">
+            <div id="progress" style="font-size: 18px; font-weight: bold; color: #555; margin-bottom: 15px;"></div>
+            <div class="question-box" id="question-text"></div>
+            
+            <div id="options-area" class="btn-group">
+                <button class="quiz-btn btn-o" onclick="submitAnswer('O')">⭕ 正確 (O)</button>
+                <button class="quiz-btn btn-x" onclick="submitAnswer('X')">❌ 錯誤 (X)</button>
+            </div>
+
+            <div id="result-area" class="hidden">
+                <div id="feedback-content"></div>
+                <button class="next-btn" onclick="nextQuestion()">下一題 ➡️</button>
+            </div>
+        </div>
+
+        <!-- 結算畫面 -->
+        <div id="score-screen" class="hidden">
+            <div class="big-title" style="margin-bottom: 20px;">🏆 挑戰結算 🏆</div>
+            <div id="final-score-box" style="font-size: 28px; font-weight: bold; margin-bottom: 25px;"></div>
+            <button class="next-btn" onclick="restartGame()">🔄 重新答題</button>
+        </div>
+    </div>
+
+    <script>
+        // 內建您的 10 題社區題庫
+        let questions = [
+            {
+                type: "是非題",
+                question: "港北社區自民國100年起以「食農教育」和「可食地景」為主軸，打造出著名的「香草食物森林」與香草園區。",
+                answer: "O",
+                explanation: "答對了，答案是對的!!"
+            },
+            {
+                type: "是非題",
+                question: "港北社區埤塘生態浮萍步道，目的活化閒置魚塭與埤塘，建置水上生態浮萍步道，推動生態與社區共生。",
+                answer: "O",
+                explanation: "答案是對的!!更早以前因垃圾亂丟問題，理事長為維護環境的乾淨問題，開始專注投入此提案。"
+            },
+            {
+                type: "是非題",
+                question: "港北社區共惠時間銀行的核心精神，是鼓勵志工服務時數累積，並能互相照顧與互助共生。",
+                answer: "O",
+                explanation: "答對了！時間銀行促進社區互助與情誼。"
+            },
+            {
+                type: "是非題",
+                question: "在時間銀行中，每個人的服務時數價值都是相等的，不因服務內容而有所差異。",
+                answer: "O",
+                explanation: "對的！時間銀行的核心價值是人人平等。"
+            },
+            {
+                type: "是非題",
+                question: "港北社區發展協會積極推動長者關懷與數位樂齡學習，包含開發各類趣味互動軟體。",
+                answer: "O",
+                explanation: "答對了！協會致力於打造科技與人情味兼具的社區。"
+            },
+            {
+                type: "是非題",
+                question: "香草食物森林只能提供觀賞，完全不能運用在社區的飲食與食農教育課程中。",
+                answer: "X",
+                explanation: "答錯囉！香草食物森林的主要目的之一就是結合食農教育與實際應用。"
+            },
+            {
+                type: "是非題",
+                question: "社區時間銀行的時數記錄與兌換，不需要任何管理與志工夥伴的維護就能自動運作。",
+                answer: "X",
+                explanation: "答錯囉！需要靠大家共同參與與管理才能順暢運作。"
+            },
+            {
+                type: "是非題",
+                question: "參與港北社區的志工服務，不僅能幫助別人，也能為自己未來累積互助時數。",
+                answer: "O",
+                explanation: "答對了！這正是時間銀行的互惠精神。"
+            },
+            {
+                type: "是非題",
+                question: "埤塘生態浮萍步道的建置，主要目的是為了發展大型商業遊樂設施。",
+                answer: "X",
+                explanation: "答錯囉！是為了活化閒置生態、推動環保與社區共生。"
+            },
+            {
+                type: "是非題",
+                question: "港北社區發展協會經常舉辦各項地方文化與產業推廣活動，凝聚居民向心力。",
+                answer: "O",
+                explanation: "答對了！協會舉辦多項活動促進居民交流。"
+            }
+        ];
+
+        let currentIndex = 0;
+        let score = 0;
+
+        function startGame() {
+            questions.sort(() => Math.random() - 0.5);
+            currentIndex = 0;
+            score = 0;
+
+            // 播放背景音樂
+            let bgm = document.getElementById('bgm');
+            bgm.volume = 0.4;
+            bgm.play().catch(e => console.log("BGM play error:", e));
+
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            let q = questions[currentIndex];
+            document.getElementById('progress').innerText = `📍 第 ${currentIndex + 1} / ${questions.length} 題 [${q.type}]`;
+            document.getElementById('question-text').innerText = q.question;
+            
+            document.getElementById('options-area').classList.remove('hidden');
+            document.getElementById('result-area').classList.add('hidden');
+
+            // 語音朗讀題目
+            speakText(`第 ${currentIndex + 1} 題。${q.question}`);
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function submitAnswer(userAns) {
+            window.speechSynthesis.cancel();
+            let q = questions[currentIndex];
+            let isCorrect = (userAns === q.answer);
+
+            if (isCorrect) {
+                score++;
+                let correctSound = document.getElementById('correct-sound');
+                correctSound.currentTime = 0;
+                correctSound.play().catch(e => {});
+            } else {
+                let wrongSound = document.getElementById('wrong-sound');
+                wrongSound.currentTime = 0;
+                wrongSound.play().catch(e => {});
+            }
+
+            document.getElementById('options-area').classList.add('hidden');
+            let resultArea = document.getElementById('result-area');
+            let feedbackContent = document.getElementById('feedback-content');
+            resultArea.classList.remove('hidden');
+
+            if (isCorrect) {
+                feedbackContent.className = 'feedback-box correct-bg';
+                feedbackContent.innerHTML = `✨ 答對了！讚讚讚！🎉`;
+            } else {
+                feedbackContent.className = 'feedback-box wrong-bg';
+                feedbackContent.innerHTML = `❌ 答錯了！正確答案是：【 ${q.answer} 】<br><br>💡 解析：<br>${q.explanation}`;
+            }
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex < questions.length) {
+                showQuestion();
+            } else {
+                showScoreScreen();
+            }
+        }
+
+        function showScoreScreen() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('score-screen').classList.remove('hidden');
+            
+            let finalScore = Math.round((score / questions.length) * 100);
+            let scoreBox = document.getElementById('final-score-box');
+            
+            if (finalScore >= 80) {
+                let applaudSound = document.getElementById('applaud-sound');
+                applaudSound.currentTime = 0;
+                applaudSound.play().catch(e => {});
+                scoreBox.innerHTML = `💯 最終得分：${finalScore} 分！挑戰成功！<br><br>👑 港北社區共惠時間銀行 👑<br>全體會員 恭喜您！！`;
+            } else {
+                let wrongSound = document.getElementById('wrong-sound');
+                wrongSound.currentTime = 0;
+                wrongSound.play().catch(e => {});
+                scoreBox.innerHTML = `💔 最終得分：${finalScore} 分，未達 80 分門檻，再接再勵！`;
+            }
+        }
+
+        function restartGame() {
+            let bgm = document.getElementById('bgm');
+            bgm.pause();
+            bgm.currentTime = 0;
+            document.getElementById('score-screen').classList.add('hidden');
+            document.getElementById('welcome-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
